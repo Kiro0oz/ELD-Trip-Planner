@@ -1,3 +1,5 @@
+import { LatLngTuple } from 'leaflet';
+
 export interface Location {
   lat: number;
   lng: number;
@@ -35,6 +37,8 @@ export interface RouteSegment {
   distance: number; // in miles
   duration: number; // in hours
   type: 'drive' | 'load' | 'unload' | 'break' | 'rest';
+  waypoints?: LatLngTuple[];
+  gasStops?: Location[];
 }
 
 export interface TripPlan {
@@ -43,4 +47,26 @@ export interface TripPlan {
   totalDuration: number;
   requiredBreaks: number;
   requiredRests: number;
+}
+
+export interface Driver {
+  id: string;
+  name: string;
+  licenseNumber: string;
+  company: string;
+  phoneNumber: string;
+  email: string;
+  photo?: string;
+}
+
+export interface TripHistory {
+  id: string;
+  driverId: string;
+  date: Date;
+  startLocation: Location;
+  endLocation: Location;
+  distance: number;
+  duration: number;
+  status: 'completed' | 'in-progress' | 'planned';
+  logs: DailyLog[];
 }

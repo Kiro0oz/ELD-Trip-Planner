@@ -9,8 +9,9 @@ const REQUIRED_BREAK_TIME = 0.5; // 30 minutes
 const REQUIRED_REST_TIME = 10; // hours
 const MAX_DRIVING_BEFORE_BREAK = 8; // hours - updated to match regulations
 const MAX_CYCLE_HOURS = 70; // 70-hour limit in 8 days
-const WORKING_START_HOUR = 1; // Start at 8:00 AM
+const WORKING_START_HOUR = 1; // Start at 1:00 AM
 
+// Haversine formula
 export function calculateDistance(from: Location, to: Location): number {
   const R = 3959; // Earth's radius in miles
   const lat1 = from.lat * Math.PI / 180;
@@ -25,8 +26,6 @@ export function calculateDistance(from: Location, to: Location): number {
   
   return R * c;
 }
-
-
 
 export function calculateTripPlan(
   currentLocation: Location,
@@ -53,12 +52,12 @@ export function calculateTripPlan(
     onDutyTime = 0;
   }
 
-  // ⏳ Pickup Time
+  // Pickup Time
   segments.push({ from: pickupLocation, to: pickupLocation, distance: 0, duration: LOADING_TIME, type: 'load' });
   onDutyTime += LOADING_TIME;
   totalDuration += LOADING_TIME;
 
-  // 🚗 Drive with breaks/rests
+  // Drive with breaks/rests
   let remainingDistance = totalDistance;
   while (remainingDistance > 0) {
     let driveSegment = Math.min(
@@ -83,7 +82,7 @@ export function calculateTripPlan(
     onDutyTime += driveSegment;
     totalDuration += driveSegment;
 
-    // 🛑 Check for required break (every 4 hours)
+    // Check for required break (every 8 hours)
     if (drivingTime >= MAX_DRIVING_BEFORE_BREAK) {
       segments.push({ from: dropoffLocation, to: dropoffLocation, distance: 0, duration: REQUIRED_BREAK_TIME, type: 'break' });
       totalDuration += REQUIRED_BREAK_TIME;
@@ -113,7 +112,7 @@ export function calculateTripPlan(
     }
   }
 
-  // ⏳ Drop-off Time
+  // Drop-off Time
   segments.push({ from: dropoffLocation, to: dropoffLocation, distance: 0, duration: UNLOADING_TIME, type: 'unload' });
   onDutyTime += UNLOADING_TIME;
   totalDuration += UNLOADING_TIME;
@@ -124,7 +123,7 @@ export function calculateTripPlan(
 export function generateELDEntries(tripPlan: TripPlan): LogEntry[] {
   const entries: LogEntry[] = [];
   const startTime = new Date();
-  startTime.setHours(WORKING_START_HOUR, 0, 0, 0); // Start at 8:00 AM
+  startTime.setHours(WORKING_START_HOUR, 0, 0, 0); // Start at 6:00 AM
   let currentTime = new Date(startTime);
   
   for (const segment of tripPlan.segments) {
