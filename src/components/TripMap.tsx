@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Location, RouteSegment } from '../types';
-import { Fuel, MapPin, Truck } from 'lucide-react';
+
 
 interface TripMapProps {
   currentLocation: Location;
@@ -31,7 +31,6 @@ export const TripMap: React.FC<TripMapProps> = ({
   currentLocation,
   pickupLocation,
   dropoffLocation,
-  segments = []
 }) => {
   const [routePoints, setRoutePoints] = useState<[number, number][]>([]);
   const [gasStations, setGasStations] = useState<Location[]>([]);

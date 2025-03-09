@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, Crosshair } from 'lucide-react';
 import { LocationInput } from '../components/LocationInput';
 import { TripMap } from '../components/TripMap';
 import { ELDLog } from '../components/ELDLog';
-import { Location, TripDetails, DailyLog, TripPlan } from '../types';
+import { Location, TripDetails, DailyLog, TripPlan, LogEntry } from '../types';
 import { calculateTripPlan, generateELDEntries } from '../utils/tripCalculator';
 
 const defaultLocation: Location = {
@@ -20,6 +20,8 @@ export function HomePage() {
     currentCycleHours: 0
   });
 
+
+
   const [tripPlan, setTripPlan] = useState<TripPlan | null>(null);
   const [dailyLog, setDailyLog] = useState<DailyLog>({
     date: new Date(),
@@ -31,6 +33,52 @@ export function HomePage() {
       sleeper: 0
     }
   });
+  const [isLocating, setIsLocating] = useState(false);
+
+  const getCurrentLocation = async () => {
+    setIsLocating(true);
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      
+      // Reverse geocoding using Nominatim
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'ELD-Trip-Planner/1.0',
+            'Accept-Language': 'en'
+          }
+        }
+      );
+
+      if (!response.ok) throw new Error('Failed to get address');
+      
+      const data = await response.json();
+      
+      setTripDetails(prev => ({
+        ...prev,
+        currentLocation: {
+          lat: latitude,
+          lng: longitude,
+          address: data.display_name
+        }
+      }));
+    } catch (error) {
+      console.error('Error getting location:', error);
+      alert('Unable to get your current location. Please ensure location services are enabled.');
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
 
   useEffect(() => {
     const { currentLocation, pickupLocation, dropoffLocation, currentCycleHours } = tripDetails;
@@ -48,7 +96,13 @@ export function HomePage() {
       
       const totalHours = entries.reduce((acc, entry) => {
         const duration = (entry.endTime.getTime() - entry.startTime.getTime()) / (1000 * 60 * 60);
-        acc[entry.status] += duration;
+        const statusMapping: Record<LogEntry['status'], keyof typeof acc> = {
+          'driving': 'driving',
+          'on-duty': 'onDuty',
+          'off-duty': 'offDuty',
+          'sleeper': 'sleeper'
+        };
+        acc[statusMapping[entry.status]] += duration;
         return acc;
       }, {
         driving: 0,
@@ -72,11 +126,25 @@ export function HomePage() {
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-6">Trip Details</h2>
             <div className="space-y-4">
-              <LocationInput
-                label="Current Location"
-                value={tripDetails.currentLocation}
-                onChange={(location) => setTripDetails(prev => ({ ...prev, currentLocation: location }))}
-              />
+              <div className="relative">
+                <LocationInput
+                  label="Current Location"
+                  value={tripDetails.currentLocation}
+                  onChange={(location) => setTripDetails(prev => ({ ...prev, currentLocation: location }))}
+                />
+                <button
+                  onClick={getCurrentLocation}
+                  disabled={isLocating}
+                  className={`absolute right-2 top-8 p-1.5 rounded-md transition-colors ${
+                    isLocating
+                      ? 'bg-gray-100 text-gray-400'
+                      : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                  }`}
+                  title="Use current location"
+                >
+                  <Crosshair className="h-4 w-4" />
+                </button>
+              </div>
               <LocationInput
                 label="Pickup Location"
                 value={tripDetails.pickupLocation}

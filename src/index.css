@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* React Phone Number Input Styles */
+.PhoneInput {
+    @apply relative;
+  }
+  
+  .PhoneInputCountry {
+    @apply absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2;
+  }
+  
+  .PhoneInputCountryIcon {
+    @apply w-5 h-4 overflow-hidden rounded;
+  }
+  
+  .PhoneInputCountryIcon img {
+    @apply object-cover;
+  }
+  
+  .PhoneInputCountrySelectArrow {
+    @apply border-t-4 border-x-4 border-x-transparent border-t-gray-400;
+  }
+  
+  .PhoneInputInput {
+    @apply w-full pl-[4.5rem] pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500;
+  }

@@ -69,7 +69,7 @@ export const LocationInput: React.FC<LocationInputProps> = ({ label, value, onCh
         setError('No location found. Try another search.');
       }
     } catch (error) {
-      if (error.name !== 'AbortError') {
+      if (error !== 'AbortError') {
         setError('Error searching location. Please try again.');
         console.error('Error searching location:', error);
       }

@@ -1,4 +1,5 @@
 import { DriverProfile } from '../components/DriverProfile';
+import { TripHistory } from '../types';
 import { generateTripReport } from '../utils/reportGenerator';
 
 // Sample driver data
@@ -51,7 +52,7 @@ const sampleTripHistory = [
     status: 'completed',
     logs: []
   }
-];
+] as TripHistory[];
 
 export function ProfilePage() {
   const handleDownloadReport = (tripId: string) => {
