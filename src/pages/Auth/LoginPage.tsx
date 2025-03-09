@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import { ToastContainer } from 'react-toastify';
 import LoginForm from "../../components/Auth/LoginForm";
 import RegisterForm from "../../components/Auth/RegisterForm";
 
@@ -40,6 +40,7 @@ export function LoginPage() {
 
         {isLogin ? <LoginForm /> : <RegisterForm />}
       </div>
+      <ToastContainer  />
     </div>
   );
 }

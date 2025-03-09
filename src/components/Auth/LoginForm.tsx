@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { LogIn } from "lucide-react";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
@@ -15,7 +15,7 @@ const LoginForm = () => {
   const { login } = useAuth();
   const onLoginSubmit = async (data: LoginFormData) => {
     try {
-      await login(data.email, data.password);
+      await login(data.username, data.password);
     } catch (error) {
       console.error("Login failed:", error);
     }
@@ -31,19 +31,19 @@ const LoginForm = () => {
     >
       <div>
         <label
-          htmlFor="email"
+          htmlFor="username"
           className="block text-sm font-medium text-gray-700"
         >
-          Email address
+          Username
         </label>
         <input
-          {...loginForm.register("email")}
-          type="email"
+          {...loginForm.register("username")}
+          type="text"
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         />
-        {loginForm.formState.errors.email && (
+        {loginForm.formState.errors.username && (
           <p className="mt-1 text-sm text-red-600">
-            {loginForm.formState.errors.email.message}
+            {loginForm.formState.errors.username.message}
           </p>
         )}
       </div>

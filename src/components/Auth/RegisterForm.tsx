@@ -13,9 +13,9 @@ const licenseRegex = /^[A-Z0-9]{6,12}$/;
 const registerSchema = z
   .object({
     username: z.string().min(3, "Username must be at least 3 characters"),
-    firstName: z.string().min(2, "First name must be at least 2 characters"),
-    lastName: z.string().min(2, "Last name must be at least 2 characters"),
-    license: z
+    first_name: z.string().min(2, "First name must be at least 2 characters"),
+    last_name: z.string().min(2, "Last name must be at least 2 characters"),
+    license_number: z
       .string()
       .regex(
         licenseRegex,
@@ -82,14 +82,14 @@ const RegisterForm = () => {
             License Number
           </label>
           <input
-            {...registerForm.register("license")}
+            {...registerForm.register("license_number")}
             type="text"
             placeholder="e.g., CDL123456"
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 uppercase"
           />
-          {registerForm.formState.errors.license && (
+          {registerForm.formState.errors.license_number && (
             <p className="mt-1 text-sm text-red-600">
-              {registerForm.formState.errors.license.message}
+              {registerForm.formState.errors.license_number.message}
             </p>
           )}
         </div>
@@ -104,13 +104,13 @@ const RegisterForm = () => {
             First Name
           </label>
           <input
-            {...registerForm.register("firstName")}
+            {...registerForm.register("first_name")}
             type="text"
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           />
-          {registerForm.formState.errors.firstName && (
+          {registerForm.formState.errors.first_name && (
             <p className="mt-1 text-sm text-red-600">
-              {registerForm.formState.errors.firstName.message}
+              {registerForm.formState.errors.first_name.message}
             </p>
           )}
         </div>
@@ -123,13 +123,13 @@ const RegisterForm = () => {
             Last Name
           </label>
           <input
-            {...registerForm.register("lastName")}
+            {...registerForm.register("last_name")}
             type="text"
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           />
-          {registerForm.formState.errors.lastName && (
+          {registerForm.formState.errors.last_name && (
             <p className="mt-1 text-sm text-red-600">
-              {registerForm.formState.errors.lastName.message}
+              {registerForm.formState.errors.last_name.message}
             </p>
           )}
         </div>
