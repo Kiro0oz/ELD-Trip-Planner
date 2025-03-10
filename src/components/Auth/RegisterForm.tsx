@@ -10,6 +10,10 @@ import "react-phone-number-input/style.css";
 
 const licenseRegex = /^[A-Z0-9]{6,12}$/;
 
+interface RegisterFormProps {
+  onRegisterSuccess: () => void; 
+}
+
 const registerSchema = z
   .object({
     username: z.string().min(3, "Username must be at least 3 characters"),
@@ -33,7 +37,7 @@ const registerSchema = z
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-const RegisterForm = () => {
+const RegisterForm = ({ onRegisterSuccess }: RegisterFormProps) => {
   const { register } = useAuth();
 
   const registerForm = useForm<RegisterFormData>({
@@ -44,6 +48,7 @@ const RegisterForm = () => {
     try {
       const { confirmPassword, ...registerData } = data;
       await register(registerData as RegisterData);
+      onRegisterSuccess(); 
     } catch (error) {
       console.error("Registration failed:", error);
     }

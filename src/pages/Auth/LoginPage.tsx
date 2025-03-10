@@ -38,7 +38,7 @@ export function LoginPage() {
           </p>
         </div>
 
-        {isLogin ? <LoginForm /> : <RegisterForm />}
+        {isLogin ? <LoginForm /> : <RegisterForm onRegisterSuccess={() => setIsLogin(true)}  />}
       </div>
       <ToastContainer  />
     </div>
