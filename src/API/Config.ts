@@ -1,1 +1,1 @@
-export const DOMAIN = 'Trips.pythonanywhere.com'
+export const DOMAIN = 'https://trips.pythonanywhere.com'
