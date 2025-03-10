@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Clock, Crosshair } from 'lucide-react';
+import { useState } from 'react';
+import { Clock, Crosshair, Plus, MapPin, Box, BedDouble, Truck, ChevronDown, ChevronUp } from 'lucide-react';
 import { LocationInput } from '../components/LocationInput';
 import { TripMap } from '../components/TripMap';
 import { ELDLog } from '../components/ELDLog';
 import { Location, TripDetails, DailyLog, TripPlan, LogEntry } from '../types';
 import { calculateTripPlan, generateELDEntries } from '../utils/tripCalculator';
+import { createTrip } from '../API/Endpoints/Endpoints';
+import { showSuccessToast, showErrorToast } from '../utils/toastUtils';
+import { ToastContainer } from 'react-toastify';
+
 
 const defaultLocation: Location = {
   lat: 0,
@@ -20,8 +24,6 @@ export function HomePage() {
     currentCycleHours: 0
   });
 
-
-
   const [tripPlan, setTripPlan] = useState<TripPlan | null>(null);
   const [dailyLog, setDailyLog] = useState<DailyLog>({
     date: new Date(),
@@ -34,6 +36,8 @@ export function HomePage() {
     }
   });
   const [isLocating, setIsLocating] = useState(false);
+  const [showResults, setShowResults] = useState(true);
+  const [showSegments, setShowSegments] = useState(true);
 
   const getCurrentLocation = async () => {
     setIsLocating(true);
@@ -79,8 +83,7 @@ export function HomePage() {
     }
   };
 
-
-  useEffect(() => {
+  const handleAddTrip = async () => {
     const { currentLocation, pickupLocation, dropoffLocation, currentCycleHours } = tripDetails;
     
     if (currentLocation.lat && pickupLocation.lat && dropoffLocation.lat) {
@@ -92,6 +95,8 @@ export function HomePage() {
       );
       
       setTripPlan(plan);
+      console.log(tripDetails.pickupLocation.address);
+      
       const entries = generateELDEntries(plan);
       
       const totalHours = entries.reduce((acc, entry) => {
@@ -116,8 +121,83 @@ export function HomePage() {
         entries,
         totalHours
       });
+
+      setShowResults(true);
+      setShowSegments(true);
+
+      // Get start date as the beginning of today (UTC)
+      const today = new Date();
+      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()); 
+      const start_date = startOfToday.toISOString();
+
+      // Call the createTrip function
+      const tripData = {
+        start_location: pickupLocation.address,
+        end_location: dropoffLocation.address,
+        start_date,
+        end_date: '2025-03-09T20:00:00Z',
+        totalDistance: plan.totalDistance.toFixed(2),
+        totalDuration: plan.totalDuration.toFixed(2),
+        requiredBreaks: plan.requiredBreaks,
+        requiredRests: plan.requiredRests,
+      };
+
+      try {
+        const token = localStorage.getItem("token"); 
+        if (!token) throw new Error("User is not authenticated");
+
+        const response = await createTrip(tripData, token);
+        showSuccessToast("Trip Added Successfully")
+      } catch (error) {
+        showErrorToast("Failed to Add Trip")
+        console.error("Error creating trip:", error);
+      }
     }
-  }, [tripDetails]);
+};
+
+  const isFormComplete = () => {
+    const { currentLocation, pickupLocation, dropoffLocation } = tripDetails;
+    return (
+      currentLocation.lat !== 0 &&
+      currentLocation.lng !== 0 &&
+      pickupLocation.lat !== 0 &&
+      pickupLocation.lng !== 0 &&
+      dropoffLocation.lat !== 0 &&
+      dropoffLocation.lng !== 0
+    );
+  };
+
+  const getSegmentIcon = (type: string) => {
+    switch (type) {
+      case 'drive':
+        return <Truck className="w-5 h-5" />;
+      case 'load':
+      case 'unload':
+        return <Box className="w-5 h-5" />;
+      case 'break':
+        return <Clock className="w-5 h-5" />;
+      case 'rest':
+        return <BedDouble className="w-5 h-5" />;
+      default:
+        return <MapPin className="w-5 h-5" />;
+    }
+  };
+
+  const getSegmentColor = (type: string) => {
+    switch (type) {
+      case 'drive':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'load':
+      case 'unload':
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'break':
+        return 'bg-green-50 text-green-700 border-green-200';
+      case 'rest':
+        return 'bg-purple-50 text-purple-700 border-purple-200';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -135,7 +215,7 @@ export function HomePage() {
                 <button
                   onClick={getCurrentLocation}
                   disabled={isLocating}
-                  className={`absolute right-2 top-8 p-1.5 rounded-md transition-colors ${
+                  className={`absolute right-2 top-8 p-1.5  rounded-md transition-colors ${
                     isLocating
                       ? 'bg-gray-100 text-gray-400'
                       : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
@@ -175,44 +255,119 @@ export function HomePage() {
                   <Clock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                 </div>
               </div>
+              <button
+                onClick={handleAddTrip}
+                disabled={!isFormComplete()}
+                className={`w-full flex items-center justify-center px-4 py-2 rounded-md text-white ${
+                  isFormComplete()
+                    ? 'bg-blue-600 hover:bg-blue-700'
+                    : 'bg-gray-400 cursor-not-allowed'
+                } transition-colors duration-200`}
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Trip
+              </button>
             </div>
           </div>
         </div>
-        <div className="flex-1">
-          <TripMap
-            currentLocation={tripDetails.currentLocation}
-            pickupLocation={tripDetails.pickupLocation}
-            dropoffLocation={tripDetails.dropoffLocation}
-          />
-        </div>
+        {showResults && (
+          <div className="flex-1">
+            <TripMap
+              currentLocation={tripDetails.currentLocation}
+              pickupLocation={tripDetails.pickupLocation}
+              dropoffLocation={tripDetails.dropoffLocation}
+            />
+          </div>
+        )}
       </div>
 
-      {tripPlan && (
-        <div className="bg-white w-full mt-9 p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold mb-4">Trip Summary</h2>
-          <div className="space-y-3">
-            <p className="text-gray-700">
-              Total Distance: <span className="font-semibold">{Math.round(tripPlan.totalDistance)} miles</span>
-            </p>
-            <p className="text-gray-700">
-              Total Duration: <span className="font-semibold">{Math.round(tripPlan.totalDuration * 10) / 10} hours</span>
-            </p>
-            <p className="text-gray-700">
-              Required Breaks: <span className="font-semibold">{tripPlan.requiredBreaks}</span>
-            </p>
-            <p className="text-gray-700">
-              Required Rest Periods: <span className="font-semibold">{tripPlan.requiredRests}</span>
-            </p>
+      {showResults && tripPlan && (
+        <>
+          <div className="bg-white w-full mt-9 p-6 rounded-lg shadow-lg">
+            <h2 className="text-xl font-semibold mb-4">Trip Summary</h2>
+            <div className="space-y-3">
+              <p className="text-gray-700">
+                Total Distance: <span className="font-semibold">{Math.round(tripPlan.totalDistance)} miles</span>
+              </p>
+              <p className="text-gray-700">
+                Total Duration: <span className="font-semibold">{Math.round(tripPlan.totalDuration * 10) / 10} hours</span>
+              </p>
+              <p className="text-gray-700">
+                Required Breaks: <span className="font-semibold">{tripPlan.requiredBreaks}</span>
+              </p>
+              <p className="text-gray-700">
+                Required Rest Periods: <span className="font-semibold">{tripPlan.requiredRests}</span>
+              </p>
+            </div>
           </div>
+
+          <div className="bg-white w-full mt-6 p-6 rounded-lg shadow-lg">
+            <button
+              onClick={() => setShowSegments(!showSegments)}
+              className="w-full flex items-center justify-between text-xl font-semibold mb-4 focus:outline-none"
+            >
+              <span>Trip Segments</span>
+              {showSegments ? (
+                <ChevronUp className="w-6 h-6 text-gray-500" />
+              ) : (
+                <ChevronDown className="w-6 h-6 text-gray-500" />
+              )}
+            </button>
+            {showSegments && (
+              <div className="space-y-4">
+                {tripPlan.segments.map((segment, index) => (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-lg border ${getSegmentColor(segment.type)}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        {getSegmentIcon(segment.type)}
+                        <div>
+                          <h3 className="font-semibold capitalize">
+                            {segment.type === 'drive' ? 'Driving' :
+                             segment.type === 'load' ? 'Loading' :
+                             segment.type === 'unload' ? 'Unloading' :
+                             segment.type === 'break' ? 'Break' :
+                             'Rest Period'}
+                          </h3>
+                          <p className="text-sm mt-1">
+                            {segment.type === 'drive' ? (
+                              <>From: {segment.from.address}<br />To: {segment.to.address}</>
+                            ) : (
+                              <>Location: {segment.from.address}</>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {segment.distance > 0 && (
+                          <p className="text-sm font-medium">
+                            {Math.round(segment.distance)} miles
+                          </p>
+                        )}
+                        <p className="text-sm font-medium">
+                          {Math.round(segment.duration * 60)} minutes
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+      <ToastContainer />
+      
+      {showResults && (
+        <div className='mt-5'>
+          <ELDLog 
+            log={dailyLog}
+            onLogUpdate={setDailyLog}
+          />
         </div>
       )}
-      
-      <div className='mt-5'>
-        <ELDLog 
-          log={dailyLog}
-          onLogUpdate={setDailyLog}
-        />
-      </div>
     </div>
   );
 }

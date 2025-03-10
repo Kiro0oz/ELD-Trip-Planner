@@ -75,11 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
+  const logout = async (token: string) => {
     try {
       const refreshToken = localStorage.getItem("refresh_token");
       if (refreshToken) {
-        await logoutUser(refreshToken);
+        await logoutUser(refreshToken, token);
       }
     } catch (error) {
       console.error("Error logging out:", error);

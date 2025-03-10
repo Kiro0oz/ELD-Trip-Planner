@@ -51,22 +51,24 @@ export interface TripPlan {
 
 export interface Driver {
   id: string;
-  name: string;
-  licenseNumber: string;
-  company: string;
-  phoneNumber: string;
+  first_name: string;
+  last_name: string;
+  license_number: string;
+  phone: string;
   email: string;
   photo?: string;
 }
 
 export interface TripHistory {
-  id: string;
+  id: number;
   driverId: string;
-  date: Date;
-  startLocation: Location;
-  endLocation: Location;
-  distance: number;
-  duration: number;
+  start_date: Date;
+  end_date: Date;
+  report_url: string;
+  start_location: string;
+  end_location: string;
+  totalDistance: number;
+  totalDuration: number;
   status: 'completed' | 'in-progress' | 'planned';
   logs: DailyLog[];
 }
