@@ -43,7 +43,7 @@ export function calculateTripPlan(
   let requiredBreaks = 0;
   let requiredRests = 0;
 
-  // 🚨 Ensure driver is within 70-hour limit
+  // Ensure driver is within 70-hour limit
   if (remainingCycleHours <= 0) {
     segments.push({ from: currentLocation, to: currentLocation, distance: 0, duration: REQUIRED_REST_TIME, type: 'rest' });
     requiredRests++;
@@ -87,7 +87,7 @@ export function calculateTripPlan(
       segments.push({ from: dropoffLocation, to: dropoffLocation, distance: 0, duration: REQUIRED_BREAK_TIME, type: 'break' });
       totalDuration += REQUIRED_BREAK_TIME;
       requiredBreaks++;
-      drivingTime = 0; // Reset driving time after break
+      drivingTime = 0; 
     }
 
     if (drivingTime >= MAX_DRIVING_TIME) {
@@ -108,7 +108,7 @@ export function calculateTripPlan(
       segments.push({ from: dropoffLocation, to: dropoffLocation, distance: 0, duration: REQUIRED_REST_TIME, type: 'rest' });
       requiredRests++;
       totalDuration += REQUIRED_REST_TIME;
-      onDutyTime = 0; // Reset on-duty time after rest
+      onDutyTime = 0; 
     }
   }
 
@@ -123,7 +123,7 @@ export function calculateTripPlan(
 export function generateELDEntries(tripPlan: TripPlan): LogEntry[] {
   const entries: LogEntry[] = [];
   const startTime = new Date();
-  startTime.setHours(WORKING_START_HOUR, 0, 0, 0); // Start at 6:00 AM
+  startTime.setHours(WORKING_START_HOUR, 0, 0, 0);
   let currentTime = new Date(startTime);
   
   for (const segment of tripPlan.segments) {

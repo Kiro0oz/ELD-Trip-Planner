@@ -96,7 +96,6 @@ export function HomePage() {
       );
 
       setTripPlan(plan);
-      console.log(tripDetails.pickupLocation.address);
 
       const entries = generateELDEntries(plan);
 

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DriverProfile } from '../components/DriverProfile';
 import { Driver, TripHistory } from '../types';
-import { generateTripReport } from '../utils/reportGenerator';
 import { useAuth } from '../context/AuthContext';
 import { driverInfo ,driverTripHistory  } from '../API/Endpoints/Endpoints';
 import { DOMAIN } from '../API/Config';
@@ -23,7 +22,6 @@ export function ProfilePage() {
           if (driverData?.id) {
             const trips = await driverTripHistory(token, driverData.id);
             setTripHistory(trips || []);
-            console.log(tripHistory)
           }
         }
       } catch (error) {
@@ -39,15 +37,14 @@ export function ProfilePage() {
   }
 
   const handleDownloadReport = async (event: React.MouseEvent, tripId: number) => {
-    event.preventDefault(); // Prevent navigation
+    event.preventDefault(); 
   
     const trip = tripHistory.find((t) => t.id === tripId);
     if (trip && trip.report_url) {
       try {
-        const cleanedUrl = trip.report_url.replace(/\\/g, "/"); // Normalize slashes
+        const cleanedUrl = trip.report_url.replace(/\\/g, "/"); 
         const fullUrl = `${DOMAIN}${cleanedUrl}`;
   
-        // Fetch the file as a blob
         const response = await fetch(fullUrl, { method: "GET" });
         if (!response.ok) {
           throw new Error("Failed to download report");
@@ -64,7 +61,6 @@ export function ProfilePage() {
         link.click();
         document.body.removeChild(link);
   
-        // Cleanup blob URL
         window.URL.revokeObjectURL(blobUrl);
       } catch (error) {
         console.error("Error downloading report:", error);

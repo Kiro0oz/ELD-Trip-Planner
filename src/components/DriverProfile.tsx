@@ -1,5 +1,4 @@
 import { Driver, TripHistory } from "../types";
-import { DOMAIN } from "../API/Config";
 import {
   Download,
   User,
@@ -8,7 +7,7 @@ import {
   Building,
   CreditCard,
 } from "lucide-react";
-import { format } from "date-fns";
+
 
 interface DriverProfileProps {
   driver: Driver;
