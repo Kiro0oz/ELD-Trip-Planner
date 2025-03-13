@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       showSuccessToast("Registration successful!");
     } catch (error) {
       showErrorToast("Registration failed");
-      console.error("Registration failed " + error);
+      console.error("Registration failed " , error);
     }
   };
 

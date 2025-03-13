@@ -8,6 +8,8 @@ import type { RegisterData } from "../../context/AuthContext";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 
+
+
 const licenseRegex = /^[A-Z0-9]{6,12}$/;
 
 interface RegisterFormProps {
@@ -54,8 +56,11 @@ const RegisterForm = ({ onRegisterSuccess }: RegisterFormProps) => {
     }
   };
 
+
+
   return (
-    <form
+    <>
+          <form
       onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
       className="space-y-6"
     >
@@ -232,6 +237,7 @@ const RegisterForm = ({ onRegisterSuccess }: RegisterFormProps) => {
         Create Account
       </button>
     </form>
+    </>
   );
 };
 

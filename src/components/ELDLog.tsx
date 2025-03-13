@@ -1,16 +1,24 @@
 import { format } from "date-fns";
 import { DailyLog, LogEntry } from "../types";
-import { Clock, Truck, Box, BedDouble } from "lucide-react";
+import {
+  Clock,
+  Truck,
+  Box,
+  BedDouble,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useState } from "react";
 
 interface ELDLogProps {
-  log: DailyLog;
-  onLogUpdate?: (updatedLog: DailyLog) => void;
+  logs: DailyLog[];
 }
 
-export const ELDLog: React.FC<ELDLogProps> = ({ log }) => {
-  // const GRID_HEIGHT = 300;
-  const HOURS_IN_DAY = 24;
+export const ELDLog: React.FC<ELDLogProps> = ({ logs }) => {
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const log = logs[currentDayIndex];
 
+  const HOURS_IN_DAY = 24;
 
   const getStatusColor = (status: LogEntry["status"]) => {
     switch (status) {
@@ -44,6 +52,9 @@ export const ELDLog: React.FC<ELDLogProps> = ({ log }) => {
 
   // Calculate total hours for each status
   const calculateTotalHours = () => {
+    if (!log || !log.entries) {
+      return { driving: 0, onDuty: 0, offDuty: 0, sleeper: 0 }; // Return default values
+    }
     const totals = {
       driving: 0,
       onDuty: 0,
@@ -106,35 +117,42 @@ export const ELDLog: React.FC<ELDLogProps> = ({ log }) => {
 
         {/* Log entries */}
         <div className="absolute top-6 left-0 w-full h-[calc(100%-1.5rem)]">
-          {log.entries.map((entry, index) => {
-            const startHour =
-              entry.startTime.getHours() + entry.startTime.getMinutes() / 60;
-            const endHour =
-              entry.endTime.getHours() + entry.endTime.getMinutes() / 60;
-            const startPercent = (startHour / HOURS_IN_DAY) * 100;
-            const width = ((endHour - startHour) / HOURS_IN_DAY) * 100;
+          {log?.entries && log?.entries?.length > 0 ? (
+            log.entries.map((entry, index) => {
+              const startHour =
+                entry.startTime.getHours() + entry.startTime.getMinutes() / 60;
+              const endHour =
+                entry.endTime.getHours() + entry.endTime.getMinutes() / 60;
+              const startPercent = (startHour / HOURS_IN_DAY) * 100;
+              const width = ((endHour - startHour) / HOURS_IN_DAY) * 100;
 
-            return (
-              <div
-                key={index}
-                className="absolute h-12 rounded-md flex items-center justify-center text-white text-sm transition-all"
-                style={{
-                  left: `${startPercent}%`,
-                  width: `${width}%`,
-                  backgroundColor: getStatusColor(entry.status),
-                  top: "1rem",
-                }}
-                title={`${format(entry.startTime, "HH:mm")} - ${format(
-                  entry.endTime,
-                  "HH:mm"
-                )}
-                    ${entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}
+              return (
+                <div
+                  key={index}
+                  className="absolute h-12 rounded-md flex items-center justify-center text-white text-sm transition-all"
+                  style={{
+                    left: `${startPercent}%`,
+                    width: `${width}%`,
+                    backgroundColor: getStatusColor(entry.status),
+                    top: "1rem",
+                  }}
+                  title={`${format(entry.startTime, "HH:mm")} - ${format(
+                    entry.endTime,
+                    "HH:mm"
+                  )}
+                    ${
+                      entry.status.charAt(0).toUpperCase() +
+                      entry.status.slice(1)
+                    }
                     ${entry.location}`}
-              >
-                {width > 8 && getStatusIcon(entry.status)}
-              </div>
-            );
-          })}
+                >
+                  {width > 8 && getStatusIcon(entry.status)}
+                </div>
+              );
+            })
+          ) : (
+            ''
+          )}
         </div>
       </div>
     );
@@ -144,9 +162,40 @@ export const ELDLog: React.FC<ELDLogProps> = ({ log }) => {
     <div className="bg-white p-6 w-full rounded-lg shadow-lg">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
+          <button
+            onClick={() => setCurrentDayIndex(Math.max(0, currentDayIndex - 1))}
+            disabled={currentDayIndex === 0}
+            className={`p-2 rounded-full ${
+              currentDayIndex === 0
+                ? "text-gray-300"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
           <h3 className="text-lg font-semibold">
-            Daily Log - {format(log.date, "MMM dd, yyyy")}
+            {log
+              ? `Daily Log - Day ${currentDayIndex + 1} - ${format(
+                  log.date,
+                  "MMM dd, yyyy"
+                )}`
+              : "Daily Log"}
           </h3>
+          <button
+            onClick={() => {
+              if (currentDayIndex < logs.length - 1) {
+                setCurrentDayIndex((prev) => prev + 1);
+              }
+            }}
+            disabled={logs.length === 0 || currentDayIndex >= logs.length - 1} // Ensure logs exist
+            className={`p-2 rounded-full ${
+              logs.length === 0 || currentDayIndex >= logs.length - 1
+                ? "text-gray-300 cursor-not-allowed"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
         </div>
 
         {renderTimeGrid()}

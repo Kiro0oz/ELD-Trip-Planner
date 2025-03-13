@@ -1,3 +1,4 @@
+import { addHours } from 'date-fns';
 import { Location, RouteSegment, TripPlan, LogEntry } from '../types';
 
 const AVERAGE_SPEED = 55; // mph
@@ -42,6 +43,7 @@ export function calculateTripPlan(
   let totalDuration = 0;
   let requiredBreaks = 0;
   let requiredRests = 0;
+  let accumulatedDrivingMiles = 0; // Track distance for fuel stops
 
   // Ensure driver is within 70-hour limit
   if (remainingCycleHours <= 0) {
@@ -67,13 +69,15 @@ export function calculateTripPlan(
 
     if (driveSegment <= 0) break;
 
-    remainingDistance -= driveSegment * AVERAGE_SPEED;
+    const segmentDistance = driveSegment * AVERAGE_SPEED;
+    remainingDistance -= segmentDistance;
+    accumulatedDrivingMiles += segmentDistance; // Track miles for fuel stop
 
     // Add driving segment
     segments.push({ 
       from: pickupLocation, 
       to: dropoffLocation, 
-      distance: driveSegment * AVERAGE_SPEED, 
+      distance: segmentDistance, 
       duration: driveSegment, 
       type: 'drive' 
     });
@@ -81,6 +85,18 @@ export function calculateTripPlan(
     drivingTime += driveSegment;
     onDutyTime += driveSegment;
     totalDuration += driveSegment;
+
+    // **Check for fuel stop (every 1000 miles)**
+    if (accumulatedDrivingMiles >= 1000) {
+      segments.push({ 
+        from: dropoffLocation, 
+        to: dropoffLocation, 
+        distance: 0, 
+        duration: 0.25, // Assuming fuel stop takes 15 mins
+        type: 'fuel' 
+      });
+      accumulatedDrivingMiles = 0; // Reset fuel counter
+    }
 
     // Check for required break (every 8 hours)
     if (drivingTime >= MAX_DRIVING_BEFORE_BREAK) {
@@ -100,9 +116,8 @@ export function calculateTripPlan(
       });
       requiredRests++;
       totalDuration += REQUIRED_REST_TIME;
-      drivingTime = 0; // Reset daily driving time after rest
+      drivingTime = 0;
     }
-
 
     if (onDutyTime >= MAX_ON_DUTY_TIME) {
       segments.push({ from: dropoffLocation, to: dropoffLocation, distance: 0, duration: REQUIRED_REST_TIME, type: 'rest' });
@@ -120,15 +135,37 @@ export function calculateTripPlan(
   return { segments, totalDistance, totalDuration, requiredBreaks, requiredRests };
 }
 
-export function generateELDEntries(tripPlan: TripPlan): LogEntry[] {
+export function generateELDEntries(tripPlan: TripPlan, dayIndex: number = 0): LogEntry[] {
   const entries: LogEntry[] = [];
   const startTime = new Date();
   startTime.setHours(WORKING_START_HOUR, 0, 0, 0);
+  startTime.setDate(startTime.getDate() + dayIndex);
+  
   let currentTime = new Date(startTime);
+  const dayEnd = new Date(startTime);
+  dayEnd.setHours(24, 0, 0, 0);
+
+  // Filter segments for the current day
+  const hoursPerDay = 24;
+  const startHour = dayIndex * hoursPerDay;
+  const endHour = (dayIndex + 1) * hoursPerDay;
+  
+  let accumulatedDuration = 0;
   
   for (const segment of tripPlan.segments) {
+    // Skip segments before current day
+    if (accumulatedDuration + segment.duration <= startHour) {
+      accumulatedDuration += segment.duration;
+      continue;
+    }
+    
+    // Stop if we've passed the current day
+    if (accumulatedDuration >= endHour) break;
+    
     const segmentStartTime = new Date(currentTime);
-    const segmentEndTime = new Date(currentTime.getTime() + segment.duration * 60 * 60 * 1000);
+    const segmentEndTime = addHours(currentTime, segment.duration);
+    
+    if (segmentEndTime > dayEnd) break;
     
     const entry: LogEntry = {
       startTime: segmentStartTime,
@@ -139,10 +176,22 @@ export function generateELDEntries(tripPlan: TripPlan): LogEntry[] {
     
     entries.push(entry);
     currentTime = segmentEndTime;
+    accumulatedDuration += segment.duration;
+  }
+  
+  // If there's remaining time in the day, add off-duty time
+  if (currentTime < dayEnd && entries.length > 0) {
+    entries.push({
+      startTime: currentTime,
+      endTime: dayEnd,
+      location: entries[entries.length - 1].location,
+      status: 'off-duty'
+    });
   }
   
   return entries;
 }
+
 
 function getStatusForSegmentType(type: RouteSegment['type']): LogEntry['status'] {
   switch (type) {
@@ -159,3 +208,4 @@ function getStatusForSegmentType(type: RouteSegment['type']): LogEntry['status']
       return 'off-duty';
   }
 }
+

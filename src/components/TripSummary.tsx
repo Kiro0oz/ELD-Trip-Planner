@@ -22,6 +22,9 @@ const TripSummary: React.FC<{ tripPlan: TripPlan }> = ({ tripPlan }) => {
         <p className="text-gray-700">
           Required Rest Periods: <span className="font-semibold">{tripPlan.requiredRests}</span>
         </p>
+        <p className="text-gray-700">
+          Total Days: <span className="font-semibold">{Math.ceil(tripPlan.totalDuration / 24)}</span>
+        </p>
       </div>
     </div>
   );

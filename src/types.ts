@@ -36,7 +36,7 @@ export interface RouteSegment {
   to: Location;
   distance: number; // in miles
   duration: number; // in hours
-  type: 'drive' | 'load' | 'unload' | 'break' | 'rest';
+  type: 'drive' | 'load' | 'unload' | 'break' | 'rest' | 'on-duty' | 'fuel';
   waypoints?: LatLngTuple[];
   gasStops?: Location[];
 }
